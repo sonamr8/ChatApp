@@ -3,10 +3,13 @@ var express = require('express');
 var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
-var port = process.env.PORT || 4000;
-server.listen(port, function(){
-console.log('Listening on %d:' + port);
-});
+const mongoose = require("mongoose");
+const ejs = require("ejs");
+const bodyParser = require("body-parser");
+
+
+
+
 app.use(express.static(__dirname));
 
 var numberOfUsers = 0;
@@ -50,4 +53,52 @@ numberOfUsers: numberOfUsers
 });
 }
 });
+});
+
+
+
+mongoose.connect("mongodb://localhost:27017", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
+  
+const messagesSchema = {
+  name: String,
+  message: String,
+};
+  
+const Messages = mongoose.model("Messages", messagesSchema);
+  
+
+  
+app.set("view engine", "ejs");
+  
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
+  
+app.get("/messages", function(req, res){
+    res.render("messages");
+});
+  
+app.post("/messages", function (req, res) {
+    console.log(req.body.name);
+  const messages = new Messages({
+      name: req.body.name,
+      message: req.body.message,
+  });
+  messages.save(function (err) {
+      if (err) {
+          throw err;
+      } else {
+        res.render("messages");
+      }
+  });
+});
+  
+
+
+var port = process.env.PORT || 4000;
+server.listen(port, function(){
+console.log('Listening on %d:' + port);
 });
